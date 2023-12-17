@@ -20,12 +20,10 @@ def can_use_block(mask, block_len):
     is a valid block of given length plus a spacer.
     """
     block = "#" * block_len + "."
-    can_cut = True
     for m, b in zip(mask, block):
         if not (m == "?" or m == b):
-            can_cut = False
-            break
-    return can_cut
+            return False
+    return True
 
 
 @lru_cache
@@ -34,7 +32,7 @@ def count_variants(mask, nums, block_idx=0):
 
     # Stop condition: no more blocks
     if block_idx >= len(nums):
-        return int("#" not in mask)
+        return 0 if "#" in mask else 1
 
     # Stop condition: no space for all blocks left
     if sum(nums[block_idx:]) > len(mask.replace(".", "")):
