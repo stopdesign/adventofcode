@@ -46,11 +46,13 @@ class Map:
     def parse_rules(self, rules):
         for rule in rules:
             dst_val, src_val, cnt = map(int, rule.split(" "))
-            self._rules.append({
-                "start": src_val,
-                "end": src_val + cnt - 1,
-                "shift": dst_val - src_val,
-            })
+            self._rules.append(
+                {
+                    "start": src_val,
+                    "end": src_val + cnt - 1,
+                    "shift": dst_val - src_val,
+                }
+            )
 
     def convert(self, val):
         for rule in self._rules:
@@ -94,7 +96,9 @@ def main(data):
 
     print(min(locations))
 
+
 if __name__ == "__main__":
-    data = open("./input.txt", "r").read()
+    path = "/".join(__file__.split("/")[:-1] + ["input.txt"])
+    data = open(path).read()
     cards = data.strip()
     main(cards)
