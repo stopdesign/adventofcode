@@ -1,3 +1,5 @@
+import re
+
 data = """
 R 6 (#70c710)
 D 5 (#0dc571)
@@ -15,88 +17,42 @@ L 2 (#015232)
 U 2 (#7a21e3)
 """
 
+MOVES = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
-class Field:
-    moves = {
-        "U": (-1, 0),
-        "R": (0, +1),
-        "D": (+1, 0),
-        "L": (0, -1),
-    }
-
-    def __init__(self):
-        self.holes = []
-        self.pos = [0, 0]
-        self.path = [(0, 0)]
-
-    def __str__(self):
-        lines = ["".join(r) for r in self.m]
-        return "\n".join(lines)
-
-    def render_map(self):
-        coords = zip(*self.path)
-        ii = next(coords)
-        jj = next(coords)
-
-        min_i = min(ii)
-        min_j = min(jj)
-
-        m = []
-        for i in range(min(ii), max(ii) + 1):
-            row = ["."] * (max(jj) - min(jj) + 1)
-            m.append(row)
-
-        for pos in self.path:
-            m[pos[0] - min_i][pos[1] - min_j] = "#"
-
-        self.m = m
-
-    def digg(self, direction, steps, color):
-        move = self.moves[direction]
-        for n in range(steps):
-            self.pos[0] += move[0]
-            self.pos[1] += move[1]
-            self.path.append(list(self.pos))
-            # print(self.pos)
-
-    def digg_all(self, steps):
-        for step in steps:
-            direction, steps, color = step.split()
-            color = color.strip("(").strip(")")
-            self.digg(direction, int(steps), color)
-
-    def fill_connected(self, start_i, start_j):
-        stack = [(start_i, start_j)]
-        grid = range(len(self.m))
-
-        while stack:
-            i, j = stack.pop()
-
-            if self.m[i][j] != ".":
-                continue
-
-            self.m[i][j] = "#"
-
-            for dr, dc in self.moves.values():
-                new_i, new_j = i + dr, j + dc
-                if new_i in grid and new_j in grid:
-                    stack.append((new_i, new_j))
-
-    def fill_inside(self):
-        for i, row in enumerate(self.m):
-            if row[0] == "#" and row[1] == ".":
-                break
-        # found enclosed cell
-        return self.fill_connected(i, 1)
+RX = re.compile("#(\w+)(\d)")
 
 
-def main(data):
-    field = Field()
-    field.digg_all(data.splitlines())
-    field.render_map()
-    field.fill_inside()
-    print(field)
-    print(str(field).count("#"))
+def polygon_area(path):
+    """
+    Shoelace formula modified for a polygon with borders.
+    """
+    area = 0
+    perimeter = 0
+    for n in range(len(path)):
+        i, j = path[n], path[n - 1]
+        area += i[0] * j[1] - j[0] * i[1]
+        perimeter += abs(i[0] - j[0]) + abs(i[1] - j[1])
+    area = (abs(area) + perimeter) // 2 + 1
+    return area
+
+
+def follow_the_plan(dig_plan):
+    i, j = 0, 0
+    path = []
+    for step in RX.findall(dig_plan):
+        length = int(step[0], 16)  # hex to int
+        direction = int(step[1])
+        d_i, d_j = MOVES[direction]
+        i += d_i * length
+        j += d_j * length
+        path.append((i, j))
+    return path
+
+
+def main(dig_plan):
+    path = follow_the_plan(dig_plan)
+    area = polygon_area(path)
+    print(area)
 
 
 # data = open("day_18/input").read()
